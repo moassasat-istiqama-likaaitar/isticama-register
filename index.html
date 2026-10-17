@@ -109,12 +109,28 @@
   .who div { display:flex; justify-content:space-between; gap:10px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,.06); font-size:14px; }
   .who div:last-child { border-bottom:0; }
   .who span { color:var(--muted); } .who b { text-align:left; }
-  .hidden { display:none; }
+  .hidden { display:none !important; }
   a.btn { display:block; text-decoration:none; }
   .saved { margin-bottom:14px; padding:12px; border-radius:16px; background:rgba(247,166,75,.08); border:1px solid rgba(247,166,75,.35); }
   .saved b { display:block; font-size:14px; color:#F7A64B; margin-bottom:8px; }
   .saved button { margin:6px 0 0; padding:11px; font-size:15px; }
   .pend { margin-top:12px; padding:12px; border-radius:16px; background:rgba(247,166,75,.12); border:1px solid rgba(247,166,75,.45); color:#ffd9a8; font-size:14px; line-height:1.7; }
+  /* هاتف التواصل */
+  .contact { margin-top:18px; text-align:center; font-size:14px; color:var(--muted); line-height:1.9; }
+  .contact a { color:var(--mint); font-weight:800; text-decoration:none; direction:ltr; display:inline-block; }
+  .contact a.wa { color:#25d366; margin:0 12px; }
+  /* مدارس أخرى */
+  .moreBtn { display:inline-block; margin-top:10px; font-size:14px; color:var(--mint); cursor:pointer; font-weight:700; user-select:none; }
+  #othersBox .chips { margin-top:8px; }
+  /* وضع التعديل */
+  .editBar { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px; padding:10px 14px; border-radius:16px;
+             background:rgba(247,166,75,.12); border:1px solid rgba(247,166,75,.5); color:#ffd9a8; font-weight:700; font-size:14px; }
+  .editBar button { width:auto; margin:0; padding:7px 14px; font-size:14px; }
+  .topBtns { display:flex; gap:8px; margin-bottom:6px; }
+  .topBtns button { margin:0; padding:11px; font-size:15px; }
+  .saved .r { display:flex; gap:8px; }
+  .saved .r button:first-child { flex:1; }
+  .saved .r button.ed { width:auto; padding:11px 14px; }
   #boot { position:fixed; inset:0; z-index:50; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
           background:var(--bg, #0b1418); color:#dfe7e6; font-size:16px; text-align:center; padding:24px; }
   #boot .spin { width:42px; height:42px; border-radius:50%; border:4px solid rgba(255,255,255,.12); border-top-color:#19e3c0; animation:spin 1s linear infinite; }
@@ -135,7 +151,9 @@
 
   <!-- الاستمارة -->
   <form id="form" class="card" autocomplete="on" novalidate>
+    <div id="editBar" class="editBar hidden"><span id="editTxt">✏️ وضع التعديل</span><button type="button" id="editCancel" class="ghost">إلغاء</button></div>
     <div id="savedBox" class="saved hidden"><b>📇 بطاقتك محفوظة في هذا الهاتف</b><div id="savedList"></div></div>
+    <div class="topBtns" id="topBtns"><button type="button" id="editOpen" class="ghost">✏️ تعديل تسجيلي</button></div>
     <div class="row2">
       <div><label class="f">الاسم</label><input id="first"></div>
       <div><label class="f">اللقب</label><input id="last"></div>
@@ -152,8 +170,13 @@
 
     <!-- بقية الأسئلة: تختفي إذا اختير «أنثى» (البرنامج للذكور حالياً) -->
     <div id="rest">
-    <label class="f">المدرسة</label>
+    <label class="f">مدرستك الأساسية</label>
     <select id="school"></select>
+    <span class="moreBtn" id="moreBtn">＋ أدرّس أيضاً في مدرسة أخرى</span>
+    <div id="othersBox" class="hidden">
+      <label class="f">مدارس أخرى تدرّس فيها <span style="font-weight:400;color:var(--muted)">(يمكن اختيار أكثر من مدرسة)</span></label>
+      <div class="chips" id="others"></div>
+    </div>
 
     <label class="f">الوظيفة في المدرسة</label>
     <select id="role"></select>
@@ -176,11 +199,11 @@
     <label class="f">رقم الهاتف (واتساب)</label>
     <input id="phone" type="tel" inputmode="numeric" placeholder="0661234567" dir="ltr">
 
-    <div class="warnNote">⚠️ تأكّد من <b>الوظيفة</b> و<b>المستوى</b> و<b>سنوات الخبرة</b> — فلا يمكن تعديلها بعد التسجيل.</div>
+    <div class="warnNote" id="warnNote">⚠️ تأكّد من معلوماتك قبل التسجيل. ولتعديلها لاحقاً تحتاج <b>رمز بطاقتك</b> (يظهر تحت رمز QR) عبر «تعديل تسجيلي».</div>
     <div class="err" id="err"></div>
     <div id="pendBox" class="pend hidden">📶 لا يوجد اتصال بالإنترنت الآن.<br>حُفظ طلبك في الهاتف، وسيُرسل <b>تلقائياً</b> عند عودة الاتصال وتظهر بطاقتك.<br>يمكنك ترك الصفحة مفتوحة، أو فتح نفس الرابط لاحقاً.</div>
     <button type="submit" id="btn">تسجيل</button>
-    <div class="hint">إذا ضاعت بطاقتك أو أخطأت في كتابة اسمك، أعد التسجيل بنفس رقم الهاتف.</div>
+    <div class="hint" id="regHint">إذا ضاعت بطاقتك، أعد التسجيل بنفس رقم الهاتف لتظهر لك من جديد.</div>
     </div>
   </form>
 
@@ -203,7 +226,26 @@
     <div class="hint">احفظها في هاتفك لتقديمها عند الدخول.</div>
     <button id="shareBtn" type="button">مشاركة البطاقة</button>
     <a id="dlBtn" class="btn"><button type="button" class="ghost">تحميل البطاقة</button></a>
+    <button id="editMine" type="button" class="ghost">✏️ تعديل بياناتي</button>
     <button id="againBtn" type="button" class="ghost">تسجيل شخص آخر</button>
+  </div>
+
+  <!-- هاتف التواصل للاستفسار (من صفحة البيانات M2) -->
+  <div id="contact" class="contact hidden"></div>
+</div>
+
+<!-- تعديل التسجيل: الهاتف + رمز البطاقة -->
+<div id="edit" class="modal hidden">
+  <div class="sheet">
+    <h3>✏️ تعديل تسجيلي</h3>
+    <p>اكتب رقم الهاتف الذي سجّلت به، و<b>رمز بطاقتك</b> المكتوب تحت رمز QR.</p>
+    <label class="f">رقم الهاتف</label>
+    <input id="ePhone" type="tel" inputmode="numeric" placeholder="0661234567" dir="ltr">
+    <label class="f">رمز البطاقة</label>
+    <input id="eCode" placeholder="IST26-0012" dir="ltr" autocapitalize="characters">
+    <div class="err" id="eErr"></div>
+    <button type="button" id="eGo">متابعة</button>
+    <button type="button" id="eBack" class="ghost">رجوع</button>
   </div>
 </div>
 
@@ -213,9 +255,9 @@
     <h3>✏️ أنت مسجّل مسبقاً</h3>
     <p>الاسم المكتوب الآن يختلف عن الاسم المسجّل في بطاقتك:</p>
     <div class="who" id="fixWho"></div>
-    <p style="margin-top:14px">هل تريد <b>تصحيح اسمك</b> في البطاقة؟ يبقى رمزك كما هو.</p>
-    <button type="button" id="fixYes">✏️ نعم، صحّح اسمي</button>
-    <button type="button" id="fixNo" class="ghost">لا، أبقِ الاسم القديم</button>
+    <p style="margin-top:14px">لتعديل اسمك أو أي معلومة أخرى تحتاج <b>رمز بطاقتك</b>. يبقى رمزك كما هو.</p>
+    <button type="button" id="fixYes">✏️ تعديل بياناتي برمز البطاقة</button>
+    <button type="button" id="fixNo" class="ghost">عرض بطاقتي كما هي</button>
     <button type="button" id="fixBack" class="ghost">رجوع لتعديل ما كتبت</button>
   </div>
 </div>
@@ -263,6 +305,32 @@ CONFIG.taughtLevels.forEach(t => {
 });
 $('role').addEventListener('change', onRoleChange);
 
+// ====== مدارس أخرى يدرّس فيها (اختيار متعدد، دون المدرسة الأساسية) ======
+CONFIG.schools.forEach(sc => {
+  const l = document.createElement('label');
+  l.innerHTML = `<input type="checkbox" value="${esc(sc)}">${esc(sc)}`;
+  l.querySelector('input').addEventListener('change', e => l.classList.toggle('on', e.target.checked));
+  $('others').appendChild(l);
+});
+function syncOthers() {   // الأساسية لا تظهر ضمن «مدارس أخرى»
+  const main = $('school').value;
+  $('others').querySelectorAll('label').forEach(l => {
+    const i = l.querySelector('input'), same = i.value === main;
+    l.classList.toggle('hidden', same);
+    if (same && i.checked) { i.checked = false; l.classList.remove('on'); }
+  });
+}
+$('school').addEventListener('change', syncOthers);
+$('moreBtn').addEventListener('click', () => { $('othersBox').classList.toggle('hidden'); syncOthers(); });
+function selectedOthers() { return [...$('others').querySelectorAll('input:checked')].map(i => i.value); }
+
+// ====== هاتف التواصل للاستفسار ======
+if (CONFIG.contact) {
+  const ph = CONFIG.contact.replace(/\s/g, ''), intl = ph.replace(/^0/, '213');
+  $('contact').innerHTML = `للاستفسار أو عند أي مشكلة تواصل معنا:<br>📞 <a href="tel:${esc(ph)}" dir="ltr" style="unicode-bidi:isolate">${esc(CONFIG.contact)}</a><a class="wa" href="https://wa.me/${esc(intl)}" target="_blank" rel="noopener">واتساب</a>`;
+  $('contact').classList.remove('hidden');
+}
+
 // ترابط القوائم: وظيفة لها ورشة ثابتة ← يختفي المستوى المدرَّس
 function roleHasWs(role) { const r = CONFIG.roles.find(x => x.name === role); return !!(r && r.ws); }
 function onRoleChange() {
@@ -309,7 +377,7 @@ $('form').addEventListener('submit', e => {
   if (genderVal() === 'أنثى') return;
   const data = {
     first: val('first'), last: val('last'), father: val('father'), gender: genderVal(),
-    exp: radioVal('exp'), school: val('school'), role: val('role'),
+    exp: radioVal('exp'), school: val('school'), role: val('role'), others: selectedOthers(),
     levels: selectedLevels(), phone: val('phone'), staffCount: val('staffCount')
   };
   const miss = !data.first ? 'الاسم' : !data.last ? 'اللقب' : !data.father ? 'اسم الأب' : !data.gender ? 'الجنس'
@@ -319,8 +387,66 @@ $('form').addEventListener('submit', e => {
   if (miss) return setErr('يرجى إدخال: ' + miss);
   setErr('');
 
-  send(data);
+  if (EDIT) saveEdit(data); else send(data);
 });
+
+// ====== تعديل التسجيل (الهاتف + رمز البطاقة) ======
+let EDIT = null;   // { phone, code } أثناء وضع التعديل
+function openEdit(phone, code) {
+  $('ePhone').value = phone || ''; $('eCode').value = code || ''; $('eErr').textContent = '';
+  $('edit').classList.remove('hidden');
+  if (phone && code) $('eGo').click();
+}
+$('editOpen').addEventListener('click', () => openEdit('', ''));
+$('eBack').addEventListener('click', () => $('edit').classList.add('hidden'));
+$('eGo').addEventListener('click', () => {
+  const b = $('eGo'), auth = { phone: $('ePhone').value.trim(), code: $('eCode').value.trim().toUpperCase() };
+  if (!auth.phone || !auth.code) return $('eErr').textContent = 'أدخل رقم الهاتف ورمز البطاقة';
+  b.disabled = true; b.textContent = 'جارٍ التحقق...'; $('eErr').textContent = '';
+  api('fetch', auth)
+    .then(rec => { $('edit').classList.add('hidden'); enterEdit(auth, rec); })
+    .catch(e => { $('eErr').textContent = netMsg(e); })
+    .finally(() => { b.disabled = false; b.textContent = 'متابعة'; });
+});
+function enterEdit(auth, rec) {
+  EDIT = { phone: rec.phone, code: rec.code };
+  resetForm();
+  $('first').value = rec.first; $('last').value = rec.last; $('father').value = rec.father;
+  setRadio('gender', rec.gender || 'ذكر'); setRadio('exp', rec.exp);
+  $('school').value = rec.school;
+  $('others').querySelectorAll('input').forEach(i => { i.checked = (rec.others || []).includes(i.value); i.parentElement.classList.toggle('on', i.checked); });
+  $('othersBox').classList.toggle('hidden', !(rec.others || []).length); syncOthers();
+  $('role').value = rec.role; onRoleChange();
+  $('levels').querySelectorAll('input').forEach(i => { i.checked = (rec.levels || []).includes(i.value); i.parentElement.classList.toggle('on', i.checked); });
+  $('staffCount').value = rec.staffCount || ''; $('phone').value = rec.phone;
+  previewWs();
+  $('editTxt').textContent = '✏️ وضع التعديل — بطاقة ' + rec.code;
+  $('editBar').classList.remove('hidden'); $('topBtns').classList.add('hidden'); $('savedBox').classList.add('hidden');
+  $('warnNote').classList.add('hidden'); $('regHint').classList.add('hidden');
+  $('btn').textContent = 'حفظ التعديلات';
+  $('result').classList.add('hidden'); $('form').classList.remove('hidden');
+  window.scrollTo(0, 0);
+}
+function exitEdit() {
+  EDIT = null;
+  $('editBar').classList.add('hidden'); $('topBtns').classList.remove('hidden');
+  $('warnNote').classList.remove('hidden'); $('regHint').classList.remove('hidden');
+  $('btn').textContent = 'تسجيل'; renderSaved();
+}
+$('editCancel').addEventListener('click', () => { exitEdit(); resetForm(); });
+function saveEdit(data) {
+  const btn = $('btn');
+  btn.disabled = true; btn.textContent = 'جارٍ الحفظ...';
+  api('update', { auth: EDIT, data })
+    .then(r => { exitEdit(); showBadge(r); })
+    .catch(err => { btn.textContent = 'حفظ التعديلات'; setErr(netMsg(err)); })
+    .finally(() => { btn.disabled = false; });
+}
+$('editMine').addEventListener('click', () => openEdit(current && current.phone, current && current.code));
+function setRadio(name, v) {
+  document.querySelectorAll(`input[name=${name}]`).forEach(i => { i.checked = i.value === v; i.parentElement.classList.toggle('on', i.checked); });
+  if (name === 'gender') $('rest').classList.toggle('hidden', v === 'أنثى');
+}
 
 let pending = null;
 function send(data) {
@@ -331,7 +457,7 @@ function send(data) {
       btn.disabled = false; btn.textContent = 'تسجيل';
       if (r.duplicate) { pending = data; showDup(r.match, r.exact); }
       else if (r.correction) { pending = data; showFix(r); }
-      else showBadge(r);
+      else showBadge(Object.assign(r, { phone: r.phone || normPh(data.phone) }));
     })
     .catch(err => {
       btn.disabled = false; btn.textContent = 'تسجيل';
@@ -359,7 +485,7 @@ function trySendPending() {
     .then(r => { clearPending();
       if (r.duplicate) { pending = p; showDup(r.match, r.exact); }
       else if (r.correction) { pending = p; showFix(r); }
-      else showBadge(r); })
+      else showBadge(Object.assign(r, { phone: r.phone || normPh(p.phone) })); })
     .catch(err => { if (!err.net) { clearPending(); setErr(netMsg(err)); } })
     .finally(() => { pendBusy = false; });
 }
@@ -369,7 +495,7 @@ setInterval(trySendPending, 10000);
 
 // ====== البطاقات المحفوظة في الهاتف: تُفتح حتى بلا إنترنت (عند الباب) ======
 function saveBadge(r) {
-  const keep = ['code', 'name', 'school', 'role', 'workshop', 'color', 'group', 'exp'];
+  const keep = ['code', 'name', 'school', 'role', 'workshop', 'color', 'group', 'exp', 'phone'];
   const b = {}; keep.forEach(k => b[k] = r[k]);
   const list = LS.get('badges', []).filter(x => x.code !== b.code);
   list.unshift(b); LS.set('badges', list.slice(0, 10));
@@ -380,10 +506,14 @@ function renderSaved() {
   $('savedBox').classList.toggle('hidden', !list.length);
   $('savedList').innerHTML = '';
   list.forEach(b => {
+    const row = document.createElement('div'); row.className = 'r';
     const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'ghost';
     btn.textContent = 'عرض بطاقة ' + b.name;
     btn.addEventListener('click', () => showBadge(Object.assign({}, b, { saved: true })));
-    $('savedList').appendChild(btn);
+    const ed = document.createElement('button'); ed.type = 'button'; ed.className = 'ghost ed'; ed.textContent = '✏️';
+    ed.title = 'تعديل'; ed.addEventListener('click', () => openEdit(b.phone, b.code));
+    row.appendChild(btn); if (CONFIG.regOpen !== false) row.appendChild(ed);
+    $('savedList').appendChild(row);
   });
 }
 renderSaved();
@@ -401,16 +531,14 @@ $('dupOther').addEventListener('click', () => { closeDup(); send(Object.assign({
 $('dupBack').addEventListener('click',  closeDup);
 
 // نافذة التصحيح
-let fixCode = '';
 function showFix(r) {
-  fixCode = r.code;
   const rows = [['المسجّل', r.old.name + ' بن ' + r.old.father], ['المكتوب الآن', r.now.name + ' بن ' + r.now.father]];
   $('fixWho').innerHTML = rows.map(([k, v]) => `<div><span>${k}</span><b dir="auto">${esc(v)}</b></div>`).join('');
   $('fix').classList.remove('hidden');
 }
 function closeFix() { $('fix').classList.add('hidden'); }
-$('fixYes').addEventListener('click',  () => { closeFix(); send(Object.assign({}, pending, { fix: 'yes', fixCode })); });
-$('fixNo').addEventListener('click',   () => { closeFix(); send(Object.assign({}, pending, { fix: 'no', fixCode })); });
+$('fixYes').addEventListener('click',  () => { closeFix(); openEdit(pending.phone, ''); setTimeout(() => $('eCode').focus(), 50); });
+$('fixNo').addEventListener('click',   () => { closeFix(); send(Object.assign({}, pending, { fix: 'no' })); });
 $('fixBack').addEventListener('click', closeFix);
 
 function genderVal() { return radioVal('gender'); }
@@ -425,6 +553,7 @@ document.querySelectorAll('#gender input').forEach(i => i.addEventListener('chan
 }));
 
 function val(id) { return $(id).value.trim(); }
+function normPh(v) { let p = String(v || '').replace(/\D/g, ''); if (p.startsWith('213')) p = '0' + p.slice(3); if (p.length === 9) p = '0' + p; return p; }
 function setErr(t) { $('err').textContent = t; }
 function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c])); }
 
@@ -433,7 +562,8 @@ async function showBadge(r) {
   current = r;
   $('form').classList.add('hidden');
   $('result').classList.remove('hidden');
-  $('resNote').textContent = r.saved ? 'بطاقتك المحفوظة في هذا الهاتف' : r.corrected ? 'تم تصحيح اسمك ✔ — هذه بطاقتك الجديدة' : r.existing ? 'أنت مسجّل مسبقاً — هذه بطاقتك' : 'تم تسجيلك بنجاح ✔';
+  $('resNote').textContent = r.saved ? 'بطاقتك المحفوظة في هذا الهاتف' : r.updated ? 'تم حفظ تعديلاتك ✔ — هذه بطاقتك المحدّثة' : r.unchanged ? 'لم يتغيّر شيء — هذه بطاقتك' : r.existing ? 'أنت مسجّل مسبقاً — هذه بطاقتك' : 'تم تسجيلك بنجاح ✔';
+  $('editMine').classList.toggle('hidden', CONFIG.regOpen === false || !r.phone);
   if (!r.saved) saveBadge(r);
   const url = await drawBadge(r);
   current.url = url;
@@ -513,7 +643,10 @@ async function drawBadge(r) {
   x.fillStyle = '#fff';
   if (facil) { x.direction = 'rtl'; fitC('مؤطر', gx + gw / 2, py + ph - 70, 800, 170, gw - 60); }
   // المجموعة لا تظهر في بطاقة الهاتف: تُكتب في البطاقة المطبوعة التي تُسلَّم عند الحضور
-  else { x.direction = 'rtl'; fitC('عند الدخول', gx + gw / 2, py + ph - 80, 800, 96, gw - 50); }
+  else {
+    x.direction = 'rtl'; x.font = '700 40px Cairo'; x.fillStyle = '#fff';
+    ['عند الدخول', 'اطلب بطاقتك المطبوعة', 'لتعرف رقم مجموعتك'].forEach((t, i) => x.fillText(t, gx + gw / 2, py + 165 + i * 58, gw - 40));
+  }
   // خانة الخبرة: بيضاء بإطار كهرماني
   x.direction = 'rtl';
   roundRect(tx, py, ew, ph, 30); x.fillStyle = '#FFF8EF'; x.fill();
@@ -571,6 +704,16 @@ $('shareBtn').addEventListener('click', async () => {
   alert('اضغط مطولاً على البطاقة ثم اختر «حفظ الصورة» أو «مشاركة».');
 });
 
+function resetForm() {
+  $('form').reset(); setErr('');
+  $('levels').querySelectorAll('label').forEach(l => l.classList.remove('on'));
+  $('others').querySelectorAll('label').forEach(l => l.classList.remove('on', 'hidden'));
+  $('othersBox').classList.add('hidden');
+  document.querySelectorAll('#gender label, #exp label').forEach(l => l.classList.remove('on'));
+  $('rest').classList.remove('hidden');
+  onRoleChange();
+}
+
 // ====== التسجيل مغلق ======
 function showClosed() {
   $('form').classList.add('hidden'); $('result').classList.add('hidden');
@@ -587,15 +730,12 @@ $('cBtn').addEventListener('click', () => {
     .finally(() => { b.disabled = false; b.textContent = 'عرض بطاقتي'; });
 });
 $('cPhone').addEventListener('keydown', e => { if (e.key === 'Enter') $('cBtn').click(); });
-if (CONFIG.regOpen === false) showClosed();
+if (CONFIG.regOpen === false) { showClosed(); $('topBtns').classList.add('hidden'); }
 
 $('againBtn').addEventListener('click', () => {
   if (CONFIG.regOpen === false) return showClosed();
-  $('form').reset();
-  $('levels').querySelectorAll('label').forEach(l => l.classList.remove('on'));
-  document.querySelectorAll('#gender label, #exp label').forEach(l => l.classList.remove('on'));
-  $('rest').classList.remove('hidden');
-  onRoleChange();
+  if (EDIT) exitEdit();
+  resetForm();
   $('result').classList.add('hidden');
   $('form').classList.remove('hidden');
   window.scrollTo(0, 0);
