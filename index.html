@@ -213,7 +213,7 @@
     <h3>✏️ أنت مسجّل مسبقاً</h3>
     <p>الاسم المكتوب الآن يختلف عن الاسم المسجّل في بطاقتك:</p>
     <div class="who" id="fixWho"></div>
-    <p style="margin-top:14px">هل تريد <b>تصحيح اسمك</b> في البطاقة؟ يبقى رمزك ومجموعتك كما هما.</p>
+    <p style="margin-top:14px">هل تريد <b>تصحيح اسمك</b> في البطاقة؟ يبقى رمزك كما هو.</p>
     <button type="button" id="fixYes">✏️ نعم، صحّح اسمي</button>
     <button type="button" id="fixNo" class="ghost">لا، أبقِ الاسم القديم</button>
     <button type="button" id="fixBack" class="ghost">رجوع لتعديل ما كتبت</button>
@@ -512,7 +512,8 @@ async function drawBadge(r) {
   x.fillStyle = AMBER; x.fillRect(gx + gw / 2 - 40, py + 84, 80, 6);
   x.fillStyle = '#fff';
   if (facil) { x.direction = 'rtl'; fitC('مؤطر', gx + gw / 2, py + ph - 70, 800, 170, gw - 60); }
-  else { x.direction = 'ltr'; fitC(r.group ? String(r.group) : '—', gx + gw / 2, py + ph - 42, 800, 230, gw - 60); }
+  // المجموعة لا تظهر في بطاقة الهاتف: تُكتب في البطاقة المطبوعة التي تُسلَّم عند الحضور
+  else { x.direction = 'rtl'; fitC('عند الدخول', gx + gw / 2, py + ph - 80, 800, 96, gw - 50); }
   // خانة الخبرة: بيضاء بإطار كهرماني
   x.direction = 'rtl';
   roundRect(tx, py, ew, ph, 30); x.fillStyle = '#FFF8EF'; x.fill();
