@@ -115,6 +115,9 @@
   .saved b { display:block; font-size:14px; color:#F7A64B; margin-bottom:8px; }
   .saved button { margin:6px 0 0; padding:11px; font-size:15px; }
   .pend { margin-top:12px; padding:12px; border-radius:16px; background:rgba(247,166,75,.12); border:1px solid rgba(247,166,75,.45); color:#ffd9a8; font-size:14px; line-height:1.7; }
+  /* الأسماء بالعربية فقط */
+  .arMsg { margin-top:8px; font-size:13px; font-weight:700; color:#ffd9a8; }
+
   /* هاتف التواصل */
   .contact { margin-top:18px; text-align:center; font-size:14px; color:var(--muted); line-height:1.9; }
   .contact a { color:var(--mint); font-weight:800; text-decoration:none; direction:ltr; display:inline-block; }
@@ -161,6 +164,7 @@
 
     <label class="f">اسم الأب</label>
     <input id="father">
+    <div class="arMsg hidden" id="arMsg">✍️ الاسم واللقب واسم الأب بالحروف العربية فقط</div>
 
     <label class="f">الجنس</label>
     <div class="seg" id="gender">
@@ -304,6 +308,29 @@ CONFIG.taughtLevels.forEach(t => {
   $('levels').appendChild(l);
 });
 $('role').addEventListener('change', onRoleChange);
+
+// ====== الأسماء بالعربية فقط: يُحذف كل حرف غير عربي فور كتابته، والحركات والتطويل تلقائياً ======
+const NOT_AR = /[^\u0621-\u063A\u0641-\u064A ]/g;
+let arTimer = null;
+['first', 'last', 'father'].forEach(id => {
+  const el = $(id);
+  el.setAttribute('lang', 'ar'); el.setAttribute('dir', 'rtl');
+  const clean = () => {
+    const v = el.value, pos = el.selectionStart;
+    const soft = v.replace(/[\u064B-\u065F\u0670\u0640]/g, '').replace(/\u0671/g, 'ا');   // حركات/تطويل: حذف صامت
+    const out = soft.replace(NOT_AR, '').replace(/ {2,}/g, ' ').replace(/^ /, '');
+    if (out === v) return;
+    const before = v.slice(0, pos).replace(/[\u064B-\u065F\u0670\u0640]/g, '').replace(NOT_AR, '').replace(/ {2,}/g, ' ').replace(/^ /, '').length;
+    el.value = out;
+    try { el.setSelectionRange(before, before); } catch (e) {}
+    if (soft.replace(NOT_AR, '') !== soft) {   // حُذف حرف غير عربي ← تنبيه قصير
+      $('arMsg').classList.remove('hidden');
+      clearTimeout(arTimer); arTimer = setTimeout(() => $('arMsg').classList.add('hidden'), 3500);
+    }
+  };
+  el.addEventListener('input', e => { if (!e.isComposing) clean(); });
+  el.addEventListener('compositionend', clean);
+});
 
 // ====== مدارس أخرى يدرّس فيها (اختيار متعدد، دون المدرسة الأساسية) ======
 CONFIG.schools.forEach(sc => {
